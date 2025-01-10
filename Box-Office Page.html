@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Office</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #0066CC; /* Angeline Academy blue */
+        }
+        #calendar {
+            margin-top: 30px;
+        }
+        #calendar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        #calendar-header button {
+            background-color: #0066CC;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        #calendar-header button:hover {
+            background-color: #004c99;
+        }
+        #calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-gap: 10px;
+            margin-top: 20px;
+        }
+        #calendar-days div {
+            text-align: center;
+            padding: 15px;
+            background-color: #82fc7e;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        #calendar-days div:hover {
+            background-color: #0066CC;
+            color: white;
+        }
+        #calendar-days div.selected {
+            background-color: #0066CC;
+            color: white;
+        }
+        #calendar-days .day-name {
+            font-weight: bold;
+            color: #0066CC;
+        }
+        #events-for-date {
+            margin-top: 20px;
+        }
+        #events-for-date ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #events-for-date li {
+            background: #e9ecef;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input, .form-group select, .form-group button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        #price-display {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+    <script>
+        let events = JSON.parse(localStorage.getItem('events')) || [];
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // Function to update calendar with events
+        function updateCalendar() {
+            const calendarDays = document.getElementById('calendar-days');
+            const calendarHeader = document.getElementById('calendar-header');
+            const today = new Date();
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDayOfMonth.getDate();
+            const firstDayOfWeek = firstDayOfMonth.getDay();
+
+            // Clear previous calendar days
+            calendarDays.innerHTML = '';
+
+            // Display month and year
+            calendarHeader.innerHTML = `
+                <button onclick="changeMonth(-1)">Prev</button>
+                <span>${firstDayOfMonth.toLocaleString('default', { month: 'long' })} ${currentYear}</span>
+                <button onclick="changeMonth(1)">Next</button>
+            `;
+
+            // Display day names (Sun, Mon, Tue, etc.)
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const dayNameDiv = document.createElement('div');
+                dayNameDiv.classList.add('day-name');
+                dayNameDiv.textContent = day;
+                calendarDays.appendChild(dayNameDiv);
+            });
+
+            // Create empty slots for the first week
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDiv = document.createElement('div');
+                calendarDays.appendChild(emptyDiv);
+            }
+
+            // Populate calendar days
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = new Date(currentYear, currentMonth, i);
+                const dayButton = document.createElement('div');
+                dayButton.textContent = i;
+                dayButton.onclick = () => displayEventsForDate(day);
+
+                calendarDays.appendChild(dayButton);
+            }
+
+            // Clear events section
+            document.getElementById('events-for-date').innerHTML = '';
+        }
+
+        // Change month (Prev or Next)
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateCalendar();
+        }
+
+        // Display events for a specific date
+        function displayEventsForDate(date) {
+            const dateString = date.toISOString().split('T')[0];  // Format to YYYY-MM-DD
+            const eventsForDate = events.filter(event => event.date === dateString);
+
+            const eventsList = document.getElementById('events-for-date');
+            eventsList.innerHTML = '';  // Clear previous events
+
+            if (eventsForDate.length === 0) {
+                eventsList.innerHTML = 'No events for this date.';
+            } else {
+                const ul = document.createElement('ul');
+                eventsForDate.forEach(event => {
+                    const li = document.createElement('li');
+                    li.textContent = `${event.name} at ${event.time} (Duration: ${event.duration} hours)`;
+                    ul.appendChild(li);
+                });
+                eventsList.appendChild(ul);
+            }
+        }
+
+        // Function to add event to calendar
+        function addToCalendar(event) {
+            event.preventDefault();
+
+            const eventSelect = document.getElementById('event');
+            const otherEventInput = document.getElementById('other-event');
+            const dateInput = document.getElementById('date');
+            const timeInput = document.getElementById('time');
+            const ticketsInput = document.getElementById('tickets');
+
+            let selectedEvent = eventSelect.value;
+            if (selectedEvent === 'other') {
+                selectedEvent = otherEventInput.value;
+                if (!selectedEvent) {
+                    alert('Please specify your event!');
+                    return;
+                }
+            }
+
+            const eventDate = dateInput.value;
+            const eventTime = timeInput.value;
+            const ticketCount = parseInt(ticketsInput.value, 10) || 1;
+
+            if (selectedEvent && eventDate && eventTime) {
+                const newEvent = {
+                    name: selectedEvent,
+                    date: eventDate,
+                    time: eventTime,
+                    dateTime: `${eventDate}T${eventTime}`,
+                    duration: ticketCount // Duration equals the number of tickets
+                };
+
+                events.push(newEvent);
+                localStorage.setItem('events', JSON.stringify(events));
+                updateCalendar();
+                alert('Event added to calendar!');
+                document.querySelector('form').reset();
+                document.getElementById('price-display').textContent = '';
+                document.getElementById('other-event').style.display = 'none';
+            } else {
+                alert('Please fill in all fields!');
+            }
+        }
+
+        // Toggle input for "other" event
+        function toggleOtherEventInput() {
+            const eventSelect = document.getElementById('event');
+            const otherEventInput = document.getElementById('other-event');
+
+            if (eventSelect.value === 'other') {
+                otherEventInput.style.display = 'block';
+                otherEventInput.required = true;
+            } else {
+                otherEventInput.style.display = 'none';
+                otherEventInput.required = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', updateCalendar);
+    </script>
+        <link rel="stylesheet" href="styles.css">
+   </head>
+    <body>
+        <nav class="navbar">
+            <div class="navbar__container">
+                <a href="" id="navbar__logo"><img class="logo" src="https://aai.pasco.k12.fl.us/wp-content/uploads/aai/2023/07/Angeline-Archers_Archer.png" alt=""></a>
+                <div class="navbar__toggle" id="moble-menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+                <ul class="navbar__menu">
+                    <li class="navbar__item">
+                        <a href="/AAI GYM Website.html" class="navbar__links">Home</a>
+                    </li>
+                    <li class="navbar__item">
+                        <a href="/Calendar_Page.html" class="navbar__links">Calendar</a>
+                    </li>
+                    <li class="navbar__item">
+                        <a href="/About.html" class="navbar__links">Info</a>
+                    </li>
+                    <li class="navbar__item">
+                        <a href="/seating.html" class="navbar__links">Seating Chart</a>
+                    </li>
+                    <li class="navbar__btn">
+                        <a href="/Box-Office Page.html" class="button">Rent Arena</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    <div class="container">
+        <h1>Arena Rental</h1>
+        
+        <!-- Ticket Booking Form -->
+        <form onsubmit="addToCalendar(event)">
+            <div class="form-group">
+                <label for="event">Select Event</label>
+                <select id="event" name="event" required onchange="toggleOtherEventInput()">
+                    <option value="">-- Choose an Event --</option>
+                    <option value="concert">Concert</option>
+                    <option value="play">Sporting Event</option>
+                    <option value="movie">Trade Show</option>
+                    <option value="other">Other</option>
+                </select>
+                <input type="text" id="other-event" name="other_event" placeholder="Enter your event" style="display: none;">
+            </div>
+
+            <div class="form-group">
+                <label for="date">Event Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="time">Event Time</label>
+                <input type="time" id="time" name="time" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tickets">Length of Event</label>
+                <input type="number" id="tickets" name="tickets" min="1" max="10" required>
+                <div id="price-display"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Your Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Rent Arena</button>
+            </div>
+        </form>
+
+        <div id="calendar">
+            <h2>Event Calendar</h2>
+            <div id="calendar-header"></div>
+            <div id="calendar-days"></div>
+            <div id="events-for-date"></div>
+        </div>
+    </div>
+</body>
+</html>

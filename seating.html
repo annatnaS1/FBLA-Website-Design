@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Seating Chart with Arena Track</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background-color: limegreen;
+        }
+
+        /* Move the container down further from the title */
+        .container {
+            position: relative;
+            width: 500px; /* Adjusted size of the container */
+            height: 500px; /* Adjusted height for the smaller arena */
+            margin: 150px auto; /* Increased margin-top to push the container lower */
+            background-color: limegreen;
+        }
+
+        /* Track Outline */
+        .track {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px; /* Smaller size for the arena */
+            height: 200px; /* Smaller height for the arena */
+            background: none;
+            border: 10px solid #000;
+            border-radius: 100px / 60px; /* Oval shape for the track */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Center text */
+        .track-text {
+            font-size: 24px; /* Smaller font for the track label */
+            font-weight: bold;
+            color: #333;
+            z-index: 1;
+        }
+
+        /* Seating rows */
+        .seating-row {
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+        }
+
+        .seat {
+            position: absolute;
+            width: 12px; /* Smaller seats */
+            height: 12px;
+            background-color: #004c99;
+            border: 1px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        /* Tooltip for row name */
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: none;
+            font-size: 14px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar__container">
+            <a href="" id="navbar__logo"><img class="logo" src="https://aai.pasco.k12.fl.us/wp-content/uploads/aai/2023/07/Angeline-Archers_Archer.png" alt=""></a>
+            <div class="navbar__toggle" id="moble-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <ul class="navbar__menu">
+                <li class="navbar__item">
+                    <a href="/AAI GYM Website.html" class="navbar__links">Home</a>
+                </li>
+                <li class="navbar__item">
+                    <a href="/Calendar_Page.html" class="navbar__links">Calendar</a>
+                </li>
+                <li class="navbar__item">
+                    <a href="/About.html" class="navbar__links">Info</a>
+                </li>
+                <li class="navbar__item">
+                    <a href="/seating.html" class="navbar__links">Seating Chart</a>
+                </li>
+                <li class="navbar__btn">
+                    <a href="/Box-Office Page.html" class="button">Rent Arena</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <h1>Seating Chart </h1>
+    <div class="container">
+        <!-- Track Outline with Arena Label -->
+        <div class="track">
+            <div class="track-text">Arena</div>
+        </div>
+        <!-- Tooltip for displaying row name -->
+        <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <script>
+        const container = document.querySelector('.container');
+        const tooltip = document.getElementById('tooltip');
+        const totalSeats = 3500; // Total number of seats
+        const totalRows = 10; // Number of concentric rows of seats
+        const seatsPerRow = Math.ceil(totalSeats / totalRows); // Adjust this to distribute seats across rows
+
+        const generateCircularSeating = () => {
+            const trackWidth = 400; // Track width
+            const trackHeight = 250; // Track height
+            const maxRadius = 180; // Maximum radius for the outermost row (adjusted to fit the smaller arena)
+
+            for (let row = 1; row <= totalRows; row++) {
+                const rowRadius = maxRadius + (row * 18); // Calculate radius for each row with some spacing
+                const rowElement = document.createElement('div');
+                rowElement.className = 'seating-row';
+                rowElement.style.width = `${rowRadius * 2}px`;
+                rowElement.style.height = `${rowRadius * 2}px`;
+
+                // Add a class for highlighting the row
+                rowElement.classList.add('highlighted-row');
+                rowElement.dataset.rowName = `Row ${row}`;
+
+                // Create seats for the current row
+                for (let seatNum = 0; seatNum < seatsPerRow; seatNum++) {
+                    const angle = (seatNum / seatsPerRow) * 360; // Angle for each seat around the circle
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.style.transform = `rotate(${angle}deg) translate(${rowRadius}px)`;
+
+                    // Add event listener for hover to highlight row and show row name
+                    seat.addEventListener('mouseenter', (event) => {
+                        rowElement.classList.add('highlighted-row');
+                        tooltip.style.display = 'block';
+                        tooltip.textContent = rowElement.dataset.rowName;
+                        tooltip.style.left = `${event.clientX + 10}px`;
+                        tooltip.style.top = `${event.clientY + 10}px`;
+                    });
+
+                    seat.addEventListener('mouseleave', () => {
+                        rowElement.classList.remove('highlighted-row');
+                        tooltip.style.display = 'none';
+                    });
+
+                    rowElement.appendChild(seat);
+                }
+
+                container.appendChild(rowElement);
+            }
+        };
+
+        generateCircularSeating();
+    </script>
+</body>
+</html>
